@@ -127,6 +127,8 @@ newWords["daylight's"] = 'D EY L AY T S'
 newWords["factor's"] = 'F AE K T ER Z'
 newWords["eileen's"] = 'AY L IY N Z'
 newWords["selden's"] = 'S EH L D AH N Z'
+newWords["Selden's"] = 'S EH L D IH N Z'  # this gets the alternative pronunciation added to the dictionary correctly
+newWords["selden's(2)"] = 'S EH L D IH N Z'
 newWords["jeanne's"] = 'JH IY N Z'
 newWords["thorpe's"] = 'TH AO R P S'
 newWords["steward's"] = 'S T UW ER D Z'
@@ -144,7 +146,7 @@ newWords["nakata's"] = 'N AA K AA T AH Z'
 newWords["doane's"] = 'D OW N Z'
 
 for k,v in newWords.items():
-    cmuSphinxDict[k.upper()] = v
+    cmuSphinxDict[k.upper()].append(v)
 
 filenames = filenameToPrompts.keys()
 filenames.sort()
