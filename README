@@ -7,11 +7,20 @@ CMU ARCTIC project (http://festvox.org/cmu_arctic/), about 1108 more
 than the 20 prompts provided in the CMU adaptation tutorial 
 (http://cmusphinx.sourceforge.net/wiki/tutorialadapt)
 
+A blog post describes some of the issues surrounding acoustic model 
+adaptation in Sphinx that are out-of-scope in this narrow project 
+(http://pwnetics.wordpress.com/2011/07/01/sphinx-4-language-model-adaptation)
+
 Provided are the four files required during the adaptation process:
 * prompts for speakers
 * transcriptions of the to-be recorded speech 
 * pronunciation dictionary entries for transcribed words
 * miscellaneous bookkeeping information
+
+And there is an additional file that has pronunciation alternatives
+and the dictionary words inline with the transcriptions.  Originally,
+the idea was that a human annotator could quickly delete the unused 
+pronunciations, but there are so many that this is not practical.
 
 Note that 4 ARCTIC prompts that contained numerals were left-out of 
 the generated prompt data, as the mapping from numerals to speech 
