@@ -38,6 +38,7 @@ cmuSphinxDictFilename = '/home/romanows/Desktop/cmudict.0.7a_SPHINX_40'  # https
 
 promptsOutFilename = '/home/romanows/Desktop/arcticAll.prompts'
 transcriptionOutFilename = '/home/romanows/Desktop/arcticAll.transcription'
+transcriptionPronunciationAltsOutFilename = '/home/romanows/Desktop/arcticAll.transcription.withPronunciationAlts'
 dictionaryOutFilename = '/home/romanows/Desktop/arcticAll.dict'
 fileidsOutFilename = '/home/romanows/Desktop/arcticAll.fileids'
 
@@ -96,12 +97,17 @@ dictPromptWords = set()
 with open(cmuSphinxDictFilename,'r') as f:
     for line in f:
         word,phones = line.strip().split('\t')
-        if word.lower() in promptWords:
-            cmuSphinxDict[word].append(phones)
+        basicWord = word.split('(')[0]
+        if basicWord.lower() in promptWords:
+            cmuSphinxDict[basicWord].append(phones)
+            if word not in cmuSphinxDict:
+                 cmuSphinxDict[word].append(phones)
             dictPromptWords.add(word.lower())
             
 nonDictPromptWords = set(promptWords).difference(dictPromptWords)
-multiplePronunciationWords = set([k for k,v in cmuSphinxDict.items() if len(w) > 1])
+multiplePronunciationWords = set()
+for w in [k for k,v in cmuSphinxDict.items() if len(v) > 1]:
+    multiplePronunciationWords.add(w)
     
 print "%d dictionary words, %d prompts words missing" % (len(cmuSphinxDict),len(nonDictPromptWords))
 print "%d dictionary words have more than one pronunciation" % (len(multiplePronunciationWords))
@@ -147,6 +153,7 @@ filenames.sort()
 fileidsFile = open(fileidsOutFilename,'w')
 promptsFile = open(promptsOutFilename,'w')
 transcriptionFile = open(transcriptionOutFilename,'w')
+transcriptionPronunciationAltsFile = open(transcriptionPronunciationAltsOutFilename,'w')
 
 class WordNotFoundInDictionary(Exception):
     pass
@@ -161,22 +168,46 @@ for filename in filenames:
     utterance = origUtterance.lower()
     try:
         utt = []
+        uttAlt = []
         for w in re.split(r"[^A-Za-z'-]+", utterance):
             if w == '':
                 continue
+
+            # TODO: Refactor the complex special-casing below
             
             writing = True
             if len(cmuSphinxDict[w.upper()]) > 0:
                 utt.append(w.upper())
+
+                if len(cmuSphinxDict[w.upper()]) > 1:
+                    uttAlt.append('%s[%s]' % (w.upper(), cmuSphinxDict[w.upper()][0]))
+                    i = 2
+                    while len(cmuSphinxDict['%s(%d)' % (w.upper(),i)]) > 0:
+                        uttAlt.append('%s(%d)[%s]' % (w.upper(), i, cmuSphinxDict['%s(%d)' % (w.upper(),i)][0]))
+                        i += 1
+                else:
+                    uttAlt.append(w.upper())
+                        
             else:
                 if w in hypenSubs.keys():
-                    utt.append(hypenSubs[w].upper())
+                    utt.append(hypenSubs[w].upper())  # No alternate pronunciations in hyphen subs at the moment
+                    uttAlt.append(hypenSubs[w].upper())
                 elif '-' in w:
                     for v in re.split(r'[-]+',w):
                         if v == '':
                             continue
-                        if len(cmuSphinxDict[v.upper()]) > 0:
+                        elif len(cmuSphinxDict[v.upper()]) > 0:
                             utt.append(v.upper())
+                            
+                            if len(cmuSphinxDict[v.upper()]) > 1:
+                                uttAlt.append('%s[%s]' % (v.upper(), cmuSphinxDict[v.upper()][0]))
+                                i = 2
+                                while len(cmuSphinxDict['%s(%d)' % (v.upper(),i)]) > 0:
+                                    uttAlt.append('%s(%d)[%s]' % (v.upper(), i, cmuSphinxDict['%s(%d)' % (v.upper(),i)][0]))
+                                    i += 1
+                            else:
+                                uttAlt.append(v.upper())                     
+
                         else:
                             failedUtterances.append(utterance)
                             raise WordNotFoundInDictionary()
@@ -187,17 +218,22 @@ for filename in filenames:
         fileidsFile.write(filename + '\n')
         promptsFile.write('%s:\t%s\n' % (filename,origUtterance))
         transcriptionFile.write('<s> %s </s> (%s)\n' % (' '.join(utt),filename))
+        transcriptionPronunciationAltsFile.write('<s> %s </s> (%s)\n' % (' '.join(uttAlt),filename))
     except WordNotFoundInDictionary:
         pass # ok, this just means we go onto the next utterance
     
+transcriptionPronunciationAltsFile.close()
 transcriptionFile.close()
 promptsFile.close()
 fileidsFile.close()
 
+dictWordsSorted = cmuSphinxDict.keys()
+dictWordsSorted.sort()
+
 dictionaryFile = open(dictionaryOutFilename,'w')
-for k,v in cmuSphinxDict.items():
-    for x in v:
-        dictionaryFile.write('%s\t%s\n' % (k,x))
+for k in dictWordsSorted:
+    if len(cmuSphinxDict[k]) > 0:
+        dictionaryFile.write('%s\t%s\n' % (k,cmuSphinxDict[k][0]))
 dictionaryFile.close()
 
 print "%d utterances couldn't be transcribed" % (len(failedUtterances))
