@@ -1,0 +1,22 @@
+Sphinx 4 Acoustic Model Adaptation Data
+by Brian Romanowski
+
+This project contains data used during the CMU Sphinx 4 acoustic model
+adapatation process.  It includes nearly all utterances from the 
+CMU ARCTIC project (http://festvox.org/cmu_arctic/), about 1108 more 
+than the 20 prompts provided in the CMU adaptation tutorial 
+(http://cmusphinx.sourceforge.net/wiki/tutorialadapt)
+
+Provided are the four files required during the adaptation process:
+* prompts for speakers
+* transcriptions of the to-be recorded speech 
+* pronunciation dictionary entries for transcribed words
+* miscellaneous bookkeeping information
+
+The Python 2.7 code used to generate the adaptation prompt data is 
+included.  To use it, you'll have to edit filesystem paths and 
+download the CMU pronunciation dictionary and the original CMU 
+ARCTIC prompts.
+
+Please let me know about the bugs you find!
+Feel free to fork the code to generate prompts for other corpora!
